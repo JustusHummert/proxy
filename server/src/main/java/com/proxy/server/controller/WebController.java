@@ -19,9 +19,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.io.IOException;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
 @Controller
 public class WebController {
 
@@ -33,10 +30,19 @@ public class WebController {
         parameters.get("url").remove(0);
         if(parameters.get("url").isEmpty())
             parameters.remove("url");
-        String proxy = request.getRequestURL().toString();
+        //Split target url
+        String[] split = targetUrl.split("/");
+        //create the proxy url
+        String proxy = request.getRequestURL().toString() + "?url=" +  split[0] + "//" + split[2];;
         WebClient webClient = createWebClient(targetUrl);
         //forward the request to the target url
-        return webClient.method(HttpMethod.valueOf(request.getMethod()))
+        return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
+    }
+
+    //forward the request to the target url and modify the answer
+    Mono<ResponseEntity<byte[]>> forwardRequest(WebClient webClient, HttpMethod method,
+                                                MultiValueMap<String, String> parameters, String targetUrl, String proxy){
+        return webClient.method(method)
                 .uri(uriBuilder -> uriBuilder.queryParams(parameters).build())
                 .accept(MediaType.ALL)
                 .retrieve()
@@ -56,11 +62,14 @@ public class WebController {
                 });
     }
 
+
+
     //modify the html to change partial urls to full urls
     private byte[] modifyAnswer(byte[] body, String url, String proxy){
         String answer = new String(body);
         //remove everything after the first / in the url
-        url = url.split("/")[0] + "//" + url.split("/")[2];
+        String[] split = url.split("/");
+        url = split[0] + "//" + split[2];
         //change partial urls to absolute urls
         answer = answer.replaceAll("src\\s*=\\s*\"/?(?!https?://|http://)","src=\""+url+"/");
         answer = answer.replaceAll("href\\s*=\\s*\"/?(?!https?://|http://)","href=\""+url+"/");
@@ -68,7 +77,7 @@ public class WebController {
         //replace ? in urls with & to avoid overwriting the url parameters
         answer = answer.replaceAll("(" + url + "[^\"]*)\\?", "$1&");
         //replace the url with the proxy url
-        answer = answer.replaceAll(url,proxy + "?url=" + url);
+        answer = answer.replaceAll(url,proxy);
         return answer.getBytes();
     }
 
