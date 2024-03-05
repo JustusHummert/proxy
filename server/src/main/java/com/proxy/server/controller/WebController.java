@@ -1,9 +1,11 @@
 package com.proxy.server.controller;
 
+import com.proxy.server.entities.Connector;
+import com.proxy.server.repositories.ConnectorRepository;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -11,16 +13,18 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.io.IOException;
+import java.util.Optional;
+
 @Controller
 public class WebController {
+    @Autowired
+    private ConnectorRepository connectorRepository;
 
     @RequestMapping("/proxy")
     public Mono<ResponseEntity<byte[]>> proxy(@RequestParam String[] url, @RequestParam MultiValueMap<String, String> parameters,
@@ -32,6 +36,8 @@ public class WebController {
             parameters.remove("url");
         //Split target url
         String[] split = targetUrl.split("/");
+        if(split.length < 3)
+            return Mono.just(ResponseEntity.badRequest().build());
         //create the proxy url
         String proxy = request.getRequestURL().toString() + "?url=" +  split[0] + "//" + split[2];;
         WebClient webClient = createWebClient(targetUrl);
@@ -39,8 +45,33 @@ public class WebController {
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
     }
 
+    @RequestMapping(value = {"/{id}/**"})
+    public Mono<ResponseEntity<byte[]>> idProxy(@PathVariable String id, @RequestParam MultiValueMap<String, String> parameters,
+                                              HttpServletRequest request) throws IOException{
+        //Get the target url
+        Optional<Connector> optionalConnector = connectorRepository.findById(id);
+        if(optionalConnector.isEmpty())
+            return Mono.just(ResponseEntity.notFound().build());
+        Connector connector = optionalConnector.get();
+        String url = connector.getUrl();
+
+        //Get the path
+        String[] path = request.getRequestURI().split("/");
+        StringBuilder targetUrlBuilder = new StringBuilder(url);
+        //combine the path after id with the target url
+        for(int i =2; i < path.length; i++) {
+            targetUrlBuilder.append("/").append(path[i]);
+        }
+        String targetUrl = targetUrlBuilder.toString();
+        //create the proxy url
+        String proxy = request.getRequestURL().toString()+"/"+id;
+        WebClient webClient = createWebClient(targetUrl);
+        //forward the request to the target url
+        return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
+    }
+
     //forward the request to the target url and modify the answer
-    Mono<ResponseEntity<byte[]>> forwardRequest(WebClient webClient, HttpMethod method,
+    private Mono<ResponseEntity<byte[]>> forwardRequest(WebClient webClient, HttpMethod method,
                                                 MultiValueMap<String, String> parameters, String targetUrl, String proxy){
         return webClient.method(method)
                 .uri(uriBuilder -> uriBuilder.queryParams(parameters).build())
@@ -74,8 +105,9 @@ public class WebController {
         answer = answer.replaceAll("src\\s*=\\s*\"/?(?!https?://|http://)","src=\""+url+"/");
         answer = answer.replaceAll("href\\s*=\\s*\"/?(?!https?://|http://)","href=\""+url+"/");
         answer = answer.replaceAll("url\\s*:\\s*\"/?(?!https?://|http://)","url: \""+url+"/");
-        //replace ? in urls with & to avoid overwriting the url parameters
-        answer = answer.replaceAll("(" + url + "[^\"]*)\\?", "$1&");
+        //if proxy has ? in it replace ? in urls with & to avoid overwriting the url parameters
+        if(proxy.contains("?"))
+            answer = answer.replaceAll("(" + url + "[^\"]*)\\?", "$1&");
         //replace the url with the proxy url
         answer = answer.replaceAll(url,proxy);
         return answer.getBytes();
