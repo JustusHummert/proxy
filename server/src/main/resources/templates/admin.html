@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmnls:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+    <style>
+        div{
+            float: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin</h1>
+    <form class="div">
+        <p>
+            <input type="text" id="id" placeholder="id" aria-label="id">
+        </p>
+        <p>
+            <input type="text" id="url" placeholder="url" aria-label="url">
+        </p>
+        <p>
+            <input type="password" id="password" placeholder="password" aria-label="password">
+        </p>
+        <p>
+            <button type="button" id="addConnectorBtn">Add Connector</button>
+        </p>
+    </form>
+    <table id="connectorTable" class="div">
+        <tbody>
+            <tr th:each="connector: ${connectors}">
+                <td th:text="${connector.id}"></td>
+                <td th:text="${connector.url}"></td>
+                <td>
+                    <button type="button" class="btn delete-Connector"
+                     th:data-id="${connector.id}">delete</button>
+                </td>
+        </tbody>
+    </table>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        //add button functionality
+        $("#addConnectorBtn").click(function (e){
+            e.preventDefault();
+            let id = $("#id").val();
+            let url = $("#url").val();
+            let password = $("#password").val();
+            if(id == ""){
+                $("#id").css("border-color", "red");
+                return;
+            }
+            if(url == ""){
+                $("#url").css("border-color", "red");
+                return;
+            }
+            if(password == ""){
+                $("#password").css("border-color", "red");
+                return;
+            }
+            $.ajax({
+                url: "/admin/addConnector",
+                method: "post",
+                data: {
+                    id: id,
+                    url: url,
+                    password: password
+                },
+                dataType: "text",
+            })
+                .done(function (data){
+                    if(data=="ID already exists")
+                        document.getElementById("id").focus();
+                    if(data=="Wrong password.")
+                        document.getElementById("password").focus();
+                    if(data==id + " now connected to " + url)
+                        location.reload();             
+                    else
+                        alert(data);
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        });
+        //delete button functionality
+        $(".delete-Connector").click(function (){
+            let id = $(this).data("id");
+            let password = prompt("password");
+            $.ajax({
+                url: "/admin/removeConnector",
+                method: "post",
+                data: {
+                    id: id,
+                    password: password
+                },
+                dataType: "text",
+            })
+                .done(function (data){
+                    if(data==id + " removed")
+                        location.reload();
+                    else
+                        alert(data);
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        });
+        //make buttons react to Enter
+        document.getElementById("password").addEventListener("keypress", function(event){
+            if(event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("addConnectorBtn").click();
+            }
+        });
+        document.getElementById("url").addEventListener("keypress", function(event){
+            if(event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("password").focus();
+            }
+        });
+        document.getElementById("id").addEventListener("keypress", function(event){
+            if(event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("url").focus();
+            }
+        });
+    </script>
+</body>
+</html>
