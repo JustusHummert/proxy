@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -64,10 +65,17 @@ public class WebController {
         }
         String targetUrl = targetUrlBuilder.toString();
         //create the proxy url
-        String proxy = request.getRequestURL().toString()+"/"+id;
+        String[] split = request.getRequestURL().toString().split("/");
+        String proxy = split[0] + "//" + split[2] + "/" + id;
         WebClient webClient = createWebClient(targetUrl);
         //forward the request to the target url
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
+    }
+
+    @GetMapping(value = "/admin")
+    public String admin(Model model){
+        model.addAttribute("connectors", connectorRepository.findAll());
+        return "admin";
     }
 
     //forward the request to the target url and modify the answer
@@ -92,8 +100,6 @@ public class WebController {
                             .body(body));
                 });
     }
-
-
 
     //modify the html to change partial urls to full urls
     private byte[] modifyAnswer(byte[] body, String url, String proxy){
