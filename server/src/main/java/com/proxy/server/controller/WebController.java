@@ -46,6 +46,13 @@ public class WebController {
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
     }
 
+    //nothing to home so homepage can be accessed without id
+    @RequestMapping(value ="")
+    public Mono<ResponseEntity<byte[]>> nothingToHome(@RequestParam MultiValueMap<String, String> parameters,
+                                                      HttpServletRequest request) throws IOException {
+        return idProxy("home", parameters, request);
+    }
+
     @RequestMapping(value = {"/{id}/**"})
     public Mono<ResponseEntity<byte[]>> idProxy(@PathVariable String id, @RequestParam MultiValueMap<String, String> parameters,
                                               HttpServletRequest request) throws IOException{

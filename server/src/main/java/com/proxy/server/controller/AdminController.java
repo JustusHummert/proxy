@@ -7,11 +7,12 @@ import com.proxy.server.repositories.ConnectorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin")
@@ -20,6 +21,8 @@ public class AdminController {
     private ConnectorRepository connectorRepository;
     @Autowired
     private AdminRepository adminRepository;
+
+    private static final String proxy = "https://justushummert.com/";
 
     //Add a connector to the database
     @PostMapping("/addConnector")
@@ -54,4 +57,19 @@ public class AdminController {
         connectorRepository.deleteById(id);
         return id + " removed";
     }
+
+    //return the Links to the Connections except home
+    @GetMapping("/getConnections")
+    public @ResponseBody Set<String> getConnections(){
+        Iterable<Connector> connectors = connectorRepository.findAll();
+        Set<String> result = new HashSet<>();
+        connectors.forEach(
+                connector -> {
+                if(!connector.getId().equals("home"))
+                    result.add(proxy + connector.getId());
+                }
+        );
+        return result;
+    }
+
 }
