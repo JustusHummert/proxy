@@ -52,7 +52,7 @@ class WebControllerTest {
                     assertThat(response).contains("Example Domain");
                 });
         connectorRepository.save(new Connector("url", "https://justushummert.com:2083"));
-        webTestClient.get().uri("/url/URLShortener")
+        webTestClient.get().uri("/url")
                 .accept(MediaType.TEXT_HTML)
                 .exchange()
                 .expectStatus().isOk()
