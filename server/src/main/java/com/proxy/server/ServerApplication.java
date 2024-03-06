@@ -27,9 +27,8 @@ public class ServerApplication {
 	public CommandLineRunner setAdminPassword() {
 		return args -> {
 			if(args.length>0 && !args[0].isEmpty()) {
-				String salt = BCrypt.gensalt();
-				String hashedPassword = BCrypt.hashpw(args[0], salt);
-				adminRepository.save(new Admin(hashedPassword, salt));
+				String hashedPassword = BCrypt.hashpw(args[0], BCrypt.gensalt());
+				adminRepository.save(new Admin(hashedPassword));
 				System.out.println("Admin password set: " + args[0]);
 			}
 		};

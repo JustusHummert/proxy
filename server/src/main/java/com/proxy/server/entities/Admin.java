@@ -12,15 +12,12 @@ public class Admin {
     //This is the password of the admin
     private String password;
 
-    //This is the salt of the password
-    private String salt;
 
     public Admin() {
     }
 
-    public Admin(String password, String salt) {
+    public Admin(String password) {
         this.password = password;
-        this.salt = salt;
     }
 
 
@@ -38,13 +35,5 @@ public class Admin {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
     }
 }
