@@ -27,6 +27,7 @@ public class WebController {
     @Autowired
     private ConnectorRepository connectorRepository;
 
+    //return the (modified) answer of the target url
     @RequestMapping("/proxy")
     public Mono<ResponseEntity<byte[]>> proxy(@RequestParam String[] url, @RequestParam MultiValueMap<String, String> parameters,
                                               HttpServletRequest request) throws IOException {
@@ -46,6 +47,12 @@ public class WebController {
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
     }
 
+    //return the proxyInterface page
+    @GetMapping("/proxyInterface")
+    public String proxyInterface(Model model){
+        return "proxyInterface";
+    }
+
     //nothing to home so homepage can be accessed without id
     @RequestMapping(value ="")
     public Mono<ResponseEntity<byte[]>> nothingToHome(@RequestParam MultiValueMap<String, String> parameters,
@@ -53,6 +60,7 @@ public class WebController {
         return idProxy("home", parameters, request);
     }
 
+    //return the (modified) answer of the url the id is linked to
     @RequestMapping(value = {"/{id}/**"})
     public Mono<ResponseEntity<byte[]>> idProxy(@PathVariable String id, @RequestParam MultiValueMap<String, String> parameters,
                                               HttpServletRequest request) throws IOException{
@@ -79,6 +87,7 @@ public class WebController {
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
     }
 
+    //return the admin page
     @GetMapping(value = "/admin")
     public String admin(Model model){
         model.addAttribute("connectors", connectorRepository.findAll());
