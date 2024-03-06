@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Optional;
+import java.util.Set;
 
 
 @SpringBootTest
@@ -42,13 +43,12 @@ class AdminControllerTest {
         String password = BCrypt.hashpw(testPassword, BCrypt.gensalt());
         adminRepository.save(new Admin(password));
         //login
-        HttpSession session =mvc.perform(MockMvcRequestBuilders.post("/admin/login")
-                        .param("password", testPassword)
-                        .accept(MediaType.ALL))
-                .andExpect(content().string(equalTo("logged in")))
-                .andReturn().getRequest().getSession();
         mockSession = new MockHttpSession();
-        mockSession.setAttribute("sessionId", session.getId());
+        mvc.perform(MockMvcRequestBuilders.post("/admin/login")
+                        .param("password", testPassword)
+                        .session(mockSession)
+                        .accept(MediaType.ALL))
+                .andExpect(content().string(equalTo("logged in")));
     }
 
     @AfterEach
@@ -81,6 +81,21 @@ class AdminControllerTest {
                         .accept(MediaType.ALL))
                 .andExpect(content().string(equalTo("Invalid session")));
         connectorRepository.deleteById("example");
+        //url without http
+        mvc.perform(MockMvcRequestBuilders.post("/admin/addConnector")
+                        .param("id", "example")
+                        .param("url", "example.com")
+                        .session(mockSession)
+                        .accept(MediaType.ALL))
+                .andExpect(content().string(equalTo("example now connected to https://example.com")));
+        connectorRepository.deleteById("example");
+        //invalid url
+        mvc.perform(MockMvcRequestBuilders.post("/admin/addConnector")
+                        .param("id", "example")
+                        .param("url", "invalid")
+                        .session(mockSession)
+                        .accept(MediaType.ALL))
+                .andExpect(content().string(equalTo("invalid url")));
     }
 
     @Test
@@ -105,5 +120,22 @@ class AdminControllerTest {
                         .session(new MockHttpSession())
                         .accept(MediaType.ALL))
                 .andExpect(content().string(equalTo("Invalid session")));
+    }
+
+    @Test
+    void login() throws Exception{
+        //wrong password
+        mvc.perform(MockMvcRequestBuilders.post("/admin/login")
+                        .param("password", "wrong")
+                        .session(mockSession)
+                        .accept(MediaType.ALL))
+                .andExpect(content().string(equalTo("Wrong Password")));
+        //no admin
+        adminRepository.deleteAll();
+        mvc.perform(MockMvcRequestBuilders.post("/admin/login")
+                        .param("password", testPassword)
+                        .session(mockSession)
+                        .accept(MediaType.ALL))
+                .andExpect(content().string(equalTo("No Admin")));
     }
 }
