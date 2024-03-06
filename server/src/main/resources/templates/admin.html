@@ -71,7 +71,7 @@
                         document.getElementById("id").focus();
                     if(data=="Wrong password.")
                         document.getElementById("password").focus();
-                    if(data==id + " now connected to " + url)
+                    if(data.includes("now connected to"))
                         location.reload();             
                     else
                         alert(data);

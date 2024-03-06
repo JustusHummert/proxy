@@ -5,12 +5,14 @@ import com.proxy.server.entities.Connector;
 import com.proxy.server.repositories.AdminRepository;
 import com.proxy.server.repositories.ConnectorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
@@ -27,16 +29,29 @@ public class AdminController {
     //Add a connector to the database
     @PostMapping("/addConnector")
     public @ResponseBody String addConnector(String id, String url, String password){
+        //check if url starts with http:// or https://  otherwise add https://
+        if(!url.startsWith("http://") && !url.startsWith("https://"))
+            url = "https://" + url;
+        //check if url is valid
+        String response =  WebClient.create(url).get().accept(MediaType.ALL).retrieve().bodyToMono(String.class)
+                .onErrorReturn("error").block();
+        //Invalid Url
+        if(response == null || response.equals("error"))
+            return "invalid url";
+        //Check if the admin password is set
         Optional<Admin> optionalAdmin = adminRepository.findById(0);
         if(optionalAdmin.isEmpty())
             return "No admin password set";
+        //Check if the password is correct
         Admin admin = optionalAdmin.get();
         String hashedPassword = BCrypt.hashpw(password, admin.getSalt());
         if(!admin.getPassword().equals(hashedPassword))
             return "Wrong password";
+        //Check if the id already exists
         if (connectorRepository.existsById(id)) {
             return "ID already exists";
         }
+        //Add the connector to the database
         connectorRepository.save(new Connector(id, url));
         return id + " now connected to " + url;
     }
