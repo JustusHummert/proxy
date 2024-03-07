@@ -19,9 +19,6 @@
             <input type="text" id="url" placeholder="url" aria-label="url">
         </p>
         <p>
-            <input type="password" id="password" placeholder="password" aria-label="password">
-        </p>
-        <p>
             <button type="button" id="addConnectorBtn">Add Connector</button>
         </p>
     </form>
@@ -39,11 +36,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         //add button functionality
-        $("#addConnectorBtn").click(function (e){
+        $("#addConnectorBtn").click(function addConnector(e){
             e.preventDefault();
             let id = $("#id").val();
             let url = $("#url").val();
-            let password = $("#password").val();
             if(id == ""){
                 $("#id").css("border-color", "red");
                 return;
@@ -52,26 +48,21 @@
                 $("#url").css("border-color", "red");
                 return;
             }
-            if(password == ""){
-                $("#password").css("border-color", "red");
-                return;
-            }
             $.ajax({
                 url: "/admin/addConnector",
                 method: "post",
                 data: {
                     id: id,
-                    url: url,
-                    password: password
+                    url: url
                 },
                 dataType: "text",
             })
                 .done(function (data){
                     if(data=="ID already exists")
                         document.getElementById("id").focus();
-                    if(data=="Wrong password.")
-                        document.getElementById("password").focus();
-                    if(data==id + " now connected to " + url)
+                    else if(data=="Invalid session")
+                        promptPassword();
+                    else if(data.includes("now connected to"))
                         location.reload();             
                     else
                         alert(data);
@@ -81,21 +72,21 @@
                 });
         });
         //delete button functionality
-        $(".delete-Connector").click(function (){
+        $(".delete-Connector").click(function deleteConnector(e){
             let id = $(this).data("id");
-            let password = prompt("password");
             $.ajax({
                 url: "/admin/removeConnector",
                 method: "post",
                 data: {
-                    id: id,
-                    password: password
+                    id: id
                 },
                 dataType: "text",
             })
                 .done(function (data){
                     if(data==id + " removed")
                         location.reload();
+                    else if(data=="Invalid session")
+                        promptPassword();
                     else
                         alert(data);
                 })
@@ -104,16 +95,10 @@
                 });
         });
         //make buttons react to Enter
-        document.getElementById("password").addEventListener("keypress", function(event){
-            if(event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("addConnectorBtn").click();
-            }
-        });
         document.getElementById("url").addEventListener("keypress", function(event){
             if(event.key === "Enter") {
                 event.preventDefault();
-                document.getElementById("password").focus();
+                document.getElementById("addConnectorBtn").click();
             }
         });
         document.getElementById("id").addEventListener("keypress", function(event){
@@ -122,6 +107,30 @@
                 document.getElementById("url").focus();
             }
         });
+
+        //function that opens prompt for password and sends it to the server
+        function promptPassword(){
+            let password = prompt("password");
+            $.ajax({
+                url: "/admin/login",
+                method: "post",
+                data: {
+                    password: password
+                },
+                dataType: "text",
+            })
+                .done(function (data){
+                    if(data == "Wrong password"){
+                        alert("Wrong password");
+                        promptPassword();
+                    }
+                    else
+                        alert(data);
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        }
     </script>
 </body>
 </html>
