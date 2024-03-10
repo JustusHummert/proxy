@@ -22,18 +22,12 @@ public class ForwardHandler {
 
     //forward the request to the target url
     public static Mono<ResponseEntity<byte[]>> forwardRequest(HttpServletRequest request, String url, MultiValueMap<String, String> parameters){
-        System.out.println("SessionId: " + request.getSession().getId());
-        //print session id
-        for (Cookie cookie : request.getCookies()) {
-            if (cookie.getName().equals("JSESSIONID")) {
-                System.out.println("JSESSIONID: " + cookie.getValue());
-            }
-        }
+        final String cookiesMapKey = url + "-cookiesMap";
         //Map to store the cookies
-        if(request.getSession().getAttribute("cookiesMap") == null)
-            request.getSession().setAttribute("cookiesMap", new HttpHeaders());
+        if(request.getSession().getAttribute(cookiesMapKey) == null)
+            request.getSession().setAttribute(cookiesMapKey, new HttpHeaders());
         //Convert the map into a String
-        HttpHeaders cookiesMap = (HttpHeaders) request.getSession().getAttribute("cookiesMap");
+        HttpHeaders cookiesMap = (HttpHeaders) request.getSession().getAttribute(cookiesMapKey);
         StringBuilder cookies = new StringBuilder();
         for(String key : cookiesMap.keySet()){
             List<String> values = cookiesMap.get(key);
