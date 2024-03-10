@@ -8,22 +8,14 @@ import jakarta.persistence.Id;
 public class Connector {
     //ID of the connector
     @Id
-    private String id;
+    private String subdomain;
 
     private String url;
 
     public Connector() {}
-    public Connector(String id, String url) {
-        this.id = id;
+    public Connector(String subdomain, String url) {
+        this.subdomain = subdomain;
         this.url = url;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getUrl() {
@@ -32,5 +24,13 @@ public class Connector {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getSubdomain() {
+        return subdomain;
+    }
+
+    public void setSubdomain(String subdomain) {
+        this.subdomain = subdomain;
     }
 }

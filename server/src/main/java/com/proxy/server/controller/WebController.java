@@ -1,6 +1,9 @@
 package com.proxy.server.controller;
 
 import com.proxy.server.entities.Connector;
+import com.proxy.server.handler.AdminHandler;
+import com.proxy.server.handler.ForwardHandler;
+import com.proxy.server.repositories.AdminRepository;
 import com.proxy.server.repositories.ConnectorRepository;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -27,8 +30,33 @@ public class WebController {
     @Autowired
     private ConnectorRepository connectorRepository;
 
+    @Autowired
+    private AdminRepository adminRepository;
+
+    //redirect all request to a Method based on subdomain
+    @RequestMapping(value="**")
+    public Object redirect(HttpServletRequest request, @RequestParam MultiValueMap<String, String> parameters,
+                                                 Model model){
+        //Get the subdomain
+        //If there is no subdomain the subdomain is the domain
+        String subdomain = request.getServerName().split("\\.")[0];
+        if(subdomain.equals("admin"))
+            //AdminHandler will handle this
+            return AdminHandler.handleRequest(request, parameters, model, connectorRepository, adminRepository);
+        if(subdomain.equals("proxy"))
+            //ProxyHandler will handle this
+            return null;
+        Optional<Connector> optionalConnector = connectorRepository.findById(subdomain);
+        if(optionalConnector.isEmpty())
+            return Mono.just(ResponseEntity.notFound().build());
+        String url = optionalConnector.get().getUrl();
+        //ForwardHandler will handle this
+        return ForwardHandler.forwardRequest(request, url, parameters);
+    }
+
+
+
     //return the (modified) answer of the target url
-    @RequestMapping("/proxy")
     public Mono<ResponseEntity<byte[]>> proxy(@RequestParam String[] url, @RequestParam MultiValueMap<String, String> parameters,
                                               HttpServletRequest request) throws IOException {
         //Get the target url and remove it from the parameters
@@ -48,20 +76,17 @@ public class WebController {
     }
 
     //return the proxyInterface page
-    @GetMapping("/proxyInterface")
     public String proxyInterface(Model model){
         return "proxyInterface";
     }
 
     //nothing to home so homepage can be accessed without id
-    @RequestMapping(value ="")
     public Mono<ResponseEntity<byte[]>> nothingToHome(@RequestParam MultiValueMap<String, String> parameters,
                                                       HttpServletRequest request) throws IOException {
         return idProxy("home", parameters, request);
     }
 
     //return the (modified) answer of the url the id is linked to
-    @RequestMapping(value = {"/{id}/**"})
     public Mono<ResponseEntity<byte[]>> idProxy(@PathVariable String id, @RequestParam MultiValueMap<String, String> parameters,
                                               HttpServletRequest request) throws IOException{
         //Get the target url
@@ -87,12 +112,6 @@ public class WebController {
         return forwardRequest(webClient, HttpMethod.valueOf(request.getMethod()), parameters, targetUrl, proxy);
     }
 
-    //return the admin page
-    @GetMapping(value = "/admin")
-    public String admin(Model model){
-        model.addAttribute("connectors", connectorRepository.findAll());
-        return "admin";
-    }
 
     //forward the request to the target url and modify the answer
     private Mono<ResponseEntity<byte[]>> forwardRequest(WebClient webClient, HttpMethod method,
