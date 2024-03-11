@@ -9,24 +9,16 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.result.view.Rendering;
-import org.springframework.web.reactive.result.view.View;
-import org.springframework.web.servlet.function.ServerResponse;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
-import org.thymeleaf.spring6.view.ThymeleafViewResolver;
+
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
@@ -39,10 +31,6 @@ public class AdminHandler {
     public static Object handleRequest(HttpServletRequest request, MultiValueMap<String, String> parameters,
                                                              Model model, ConnectorRepository connectorRepository,
                                                              AdminRepository adminRepository) {
-        //Get the part behind the domain
-
-        System.out.println("URI: " + request.getRequestURI());
-        System.out.println("ServerName: " + request.getServerName());
         //use Method according to the path
         return switch (request.getRequestURI()) {
             case "/addConnector" -> {
