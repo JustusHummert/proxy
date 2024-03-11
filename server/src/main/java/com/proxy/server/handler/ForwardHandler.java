@@ -3,7 +3,6 @@ package com.proxy.server.handler;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +12,6 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-
-import java.util.List;
 
 
 public class ForwardHandler {
@@ -29,20 +26,7 @@ public class ForwardHandler {
                 .header("Cookie", request.getHeader("Cookie"))
                 .accept(MediaType.ALL)
                 .retrieve()
-                .toEntity(byte[].class)
-                .flatMap(responseEntity -> {
-                    //Create the headers
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(responseEntity.getHeaders().getContentType());
-                    headers.setLocation(responseEntity.getHeaders().getLocation());
-                    List<String> cookiesList = responseEntity.getHeaders().get(HttpHeaders.SET_COOKIE);
-                    if(cookiesList != null)
-                        headers.put(HttpHeaders.SET_COOKIE, cookiesList);
-                    return Mono.just(ResponseEntity
-                            .status(responseEntity.getStatusCode())
-                            .headers(headers)
-                            .body(responseEntity.getBody()));
-                });
+                .toEntity(byte[].class);
     }
     //create WebClient
     private static WebClient createWebClient(String url){
