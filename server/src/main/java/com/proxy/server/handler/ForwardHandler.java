@@ -21,41 +21,23 @@ public class ForwardHandler {
 
     //forward the request to the target url
     public static Mono<ResponseEntity<byte[]>> forwardRequest(HttpServletRequest request, String url, MultiValueMap<String, String> parameters){
-        final String cookiesMapKey = url + "-cookiesMap";
-        //Map to store the cookies
-        if(request.getSession().getAttribute(cookiesMapKey) == null)
-            request.getSession().setAttribute(cookiesMapKey, new HttpHeaders());
-        //Convert the map into a String
-        HttpHeaders cookiesMap = (HttpHeaders) request.getSession().getAttribute(cookiesMapKey);
-        StringBuilder cookies = new StringBuilder();
-        for(String key : cookiesMap.keySet()){
-            List<String> values = cookiesMap.get(key);
-            for(String value : values){
-                cookies.append(key).append("=").append(value).append(";");
-            }
-        }
         String fullUrl = url + request.getRequestURI();
         //Create WebClient
         WebClient webClient = createWebClient(fullUrl);
         return webClient.method(HttpMethod.valueOf(request.getMethod()))
                 .uri(uriBuilder -> uriBuilder.queryParams(parameters).build())
-                .header("Cookie", cookies.toString())
+                .header("Cookie", request.getHeader("Cookie"))
                 .accept(MediaType.ALL)
                 .retrieve()
                 .toEntity(byte[].class)
                 .flatMap(responseEntity -> {
-                    //Get the Cookies from the response and store it in the session
-                    List<String> cookiesList = responseEntity.getHeaders().get(HttpHeaders.SET_COOKIE);
-                    if (cookiesList != null)
-                        for(String cookie : cookiesList){
-                            String[] cookieParts = cookie.split(";");
-                            String[] cookieNameValue = cookieParts[0].split("=");
-                            cookiesMap.add(cookieNameValue[0], cookieNameValue[1]);
-                        }
                     //Create the headers
                     HttpHeaders headers = new HttpHeaders();
                     headers.setContentType(responseEntity.getHeaders().getContentType());
                     headers.setLocation(responseEntity.getHeaders().getLocation());
+                    List<String> cookiesList = responseEntity.getHeaders().get(HttpHeaders.SET_COOKIE);
+                    if(cookiesList != null)
+                        headers.put(HttpHeaders.SET_COOKIE, cookiesList);
                     return Mono.just(ResponseEntity
                             .status(responseEntity.getStatusCode())
                             .headers(headers)
