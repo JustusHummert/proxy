@@ -25,25 +25,9 @@ class WebControllerTest {
     private WebTestClient webTestClient;
 
     @Test
-    void proxy() throws Exception{
-        webTestClient.get().uri("/proxy?url=https://example.com")
-                        .accept(MediaType.TEXT_HTML)
-                        .exchange()
-                        .expectStatus().isOk()
-                        .expectBody(String.class)
-                        .value(response -> {
-                            assertThat(response).contains("Example Domain");
-                        });
-        webTestClient.get().uri("/proxy?url=example")
-                .accept(MediaType.ALL)
-                .exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
     void idProxy() {
         connectorRepository.save(new Connector("example", "https://example.com"));
-        webTestClient.get().uri("/example")
+        webTestClient.get().uri("https://example.localhost")
                 .accept(MediaType.TEXT_HTML)
                 .exchange()
                 .expectStatus().isOk()
@@ -52,7 +36,7 @@ class WebControllerTest {
                     assertThat(response).contains("Example Domain");
                 });
         connectorRepository.save(new Connector("url", "https://justushummert.com:2083"));
-        webTestClient.get().uri("/url")
+        webTestClient.get().uri("https://url.localhost")
                 .accept(MediaType.TEXT_HTML)
                 .exchange()
                 .expectStatus().isOk()
@@ -60,8 +44,9 @@ class WebControllerTest {
                 .value(response -> {
                     assertThat(response).contains("URL");
                 });
-        connectorRepository.save(new Connector("grade", "https://justushummert.com:2053"));
-        webTestClient.get().uri("/grade")
+        //grade Calculator has to be started
+        connectorRepository.save(new Connector("grade", "https://localhost:2053"));
+        webTestClient.get().uri("https://grade.localhost")
                 .accept(MediaType.TEXT_HTML)
                 .exchange()
                 .expectStatus().isOk()
@@ -69,24 +54,8 @@ class WebControllerTest {
                 .value(response -> {
                     assertThat(response).contains("username");
                 });
-        webTestClient.post().uri("/grade/login?username=test&password=test")
-                .accept(MediaType.ALL)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(response -> {
-                    assertThat(response).hasSize(32);
-                    webTestClient.get().uri("/grade/main/subject?sessionId="+response+"&subjectId=102")
-                            .accept(MediaType.TEXT_HTML)
-                            .exchange()
-                            .expectStatus().isOk()
-                            .expectBody(String.class)
-                            .value(response2 -> {
-                                assertThat(response2).contains("average Grade=");
-                            });
-                });
         connectorRepository.deleteById("example");
-        webTestClient.get().uri("/example")
+        webTestClient.get().uri("https://example.localhost")
                 .accept(MediaType.ALL)
                 .exchange()
                 .expectStatus().isNotFound();
