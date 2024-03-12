@@ -24,6 +24,7 @@ public class ForwardHandler {
         return webClient.method(HttpMethod.valueOf(request.getMethod()))
                 .uri(uriBuilder -> uriBuilder.queryParams(parameters).build())
                 .header("Cookie", request.getHeader("Cookie"))
+                .header("X-Forwarded-Host", request.getHeader("Host"))
                 .accept(MediaType.ALL)
                 .retrieve()
                 .toEntity(byte[].class);

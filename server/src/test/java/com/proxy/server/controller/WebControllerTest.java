@@ -12,10 +12,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.http.MediaType;
 
 
-import java.time.Duration;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class WebControllerTest {
@@ -43,16 +39,6 @@ class WebControllerTest {
                 .expectBody(String.class)
                 .value(response -> {
                     assertThat(response).contains("URL");
-                });
-        //grade Calculator has to be started
-        connectorRepository.save(new Connector("grade", "https://localhost:2053"));
-        webTestClient.get().uri("https://grade.localhost")
-                .accept(MediaType.TEXT_HTML)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(response -> {
-                    assertThat(response).contains("username");
                 });
         connectorRepository.deleteById("example");
         webTestClient.get().uri("https://example.localhost")
