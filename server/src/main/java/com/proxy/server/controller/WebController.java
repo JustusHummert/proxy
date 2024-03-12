@@ -32,7 +32,6 @@ public class WebController {
         //Get the subdomain
         //If there is no subdomain the subdomain is the domain
         String subdomain = request.getServerName().split("\\.")[0];
-        System.out.println("Handling request to subdomain: " + subdomain);
         if (subdomain.equals("admin")) {
             return AdminHandler.handleRequest(request, parameters, model, connectorRepository, adminRepository);
         }
