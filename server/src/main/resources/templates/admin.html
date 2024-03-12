@@ -29,14 +29,14 @@
                 <td th:text="${connector.url}"></td>
                 <td>
                     <button type="button" class="btn delete-Connector"
-                     th:data-id="${connector.subdomain}">delete</button>
+                     th:data-subdomain="${connector.subdomain}">delete</button>
                 </td>
         </tbody>
     </table>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         //add button functionality
-        $("#addConnectorBtn").click(function addConnector(e){
+        $("#addConnectorBtn").click(function (e){
             e.preventDefault();
             let subdomain = $("#subdomain").val();
             let url = $("#url").val();
@@ -72,7 +72,7 @@
                 });
         });
         //delete button functionality
-        $(".delete-Connector").click(function deleteConnector(e){
+        $(".delete-Connector").click(function (e){
             let subdomain = $(this).data("subdomain");
             $.ajax({
                 url: "/removeConnector",
