@@ -13,7 +13,7 @@
     <h1>Admin</h1>
     <form class="div">
         <p>
-            <input type="text" id="id" placeholder="id" aria-label="id">
+            <input type="text" id="subdomain" placeholder="subdomain" aria-label="subdomain">
         </p>
         <p>
             <input type="text" id="url" placeholder="url" aria-label="url">
@@ -25,23 +25,23 @@
     <table id="connectorTable" class="div">
         <tbody>
             <tr th:each="connector: ${connectors}">
-                <td th:text="${connector.id}"></td>
+                <td th:text="${connector.subdomain}"></td>
                 <td th:text="${connector.url}"></td>
                 <td>
                     <button type="button" class="btn delete-Connector"
-                     th:data-id="${connector.id}">delete</button>
+                     th:data-subdomain="${connector.subdomain}">delete</button>
                 </td>
         </tbody>
     </table>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         //add button functionality
-        $("#addConnectorBtn").click(function addConnector(e){
+        $("#addConnectorBtn").click(function (e){
             e.preventDefault();
-            let id = $("#id").val();
+            let subdomain = $("#subdomain").val();
             let url = $("#url").val();
-            if(id == ""){
-                $("#id").css("border-color", "red");
+            if(subdomain == ""){
+                $("#subdomain").css("border-color", "red");
                 return;
             }
             if(url == ""){
@@ -49,17 +49,17 @@
                 return;
             }
             $.ajax({
-                url: "/admin/addConnector",
+                url: "/addConnector",
                 method: "post",
                 data: {
-                    id: id,
+                    subdomain: subdomain,
                     url: url
                 },
                 dataType: "text",
             })
                 .done(function (data){
-                    if(data=="ID already exists")
-                        document.getElementById("id").focus();
+                    if(data=="subdomain already exists")
+                        document.getElementById("subdomain").focus();
                     else if(data=="Invalid session")
                         promptPassword();
                     else if(data.includes("now connected to"))
@@ -72,18 +72,18 @@
                 });
         });
         //delete button functionality
-        $(".delete-Connector").click(function deleteConnector(e){
-            let id = $(this).data("id");
+        $(".delete-Connector").click(function (e){
+            let subdomain = $(this).data("subdomain");
             $.ajax({
-                url: "/admin/removeConnector",
+                url: "/removeConnector",
                 method: "post",
                 data: {
-                    id: id
+                    subdomain: subdomain
                 },
                 dataType: "text",
             })
                 .done(function (data){
-                    if(data==id + " removed")
+                    if(data==subdomain + " removed")
                         location.reload();
                     else if(data=="Invalid session")
                         promptPassword();
@@ -101,7 +101,7 @@
                 document.getElementById("addConnectorBtn").click();
             }
         });
-        document.getElementById("id").addEventListener("keypress", function(event){
+        document.getElementById("subdomain").addEventListener("keypress", function(event){
             if(event.key === "Enter") {
                 event.preventDefault();
                 document.getElementById("url").focus();
@@ -112,7 +112,7 @@
         function promptPassword(){
             let password = prompt("password");
             $.ajax({
-                url: "/admin/login",
+                url: "/login",
                 method: "post",
                 data: {
                     password: password
