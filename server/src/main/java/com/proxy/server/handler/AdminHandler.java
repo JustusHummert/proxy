@@ -47,7 +47,7 @@ public class AdminHandler {
             }
             case "/getConnections" -> {
                 Set<String> connections = getConnections(connectorRepository);
-                yield Mono.just(ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(connections.toString()));
+                yield Mono.just(ResponseEntity.ok().body(connections));
             }
             default ->{
                 yield admin(model, connectorRepository);
