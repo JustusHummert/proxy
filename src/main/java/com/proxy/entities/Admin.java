@@ -1,4 +1,4 @@
-package com.proxy.server.entities;
+package com.proxy.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

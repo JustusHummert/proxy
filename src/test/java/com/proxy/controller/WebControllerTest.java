@@ -1,9 +1,9 @@
-package com.proxy.server.controller;
+package com.proxy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.proxy.server.entities.Connector;
-import com.proxy.server.repositories.ConnectorRepository;
+import com.proxy.entities.Connector;
+import com.proxy.repositories.ConnectorRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,10 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.http.MediaType;
 
-
-import java.time.Duration;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,16 +39,6 @@ class WebControllerTest {
                 .expectBody(String.class)
                 .value(response -> {
                     assertThat(response).contains("URL");
-                });
-        //grade Calculator has to be started
-        connectorRepository.save(new Connector("grade", "https://localhost:2053"));
-        webTestClient.get().uri("https://grade.localhost")
-                .accept(MediaType.TEXT_HTML)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(response -> {
-                    assertThat(response).contains("username");
                 });
         connectorRepository.deleteById("example");
         webTestClient.get().uri("https://example.localhost")

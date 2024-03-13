@@ -1,7 +1,7 @@
-package com.proxy.server;
+package com.proxy;
 
-import com.proxy.server.entities.Admin;
-import com.proxy.server.repositories.AdminRepository;
+import com.proxy.entities.Admin;
+import com.proxy.repositories.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
