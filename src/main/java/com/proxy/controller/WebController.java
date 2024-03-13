@@ -1,10 +1,10 @@
-package com.proxy.server.controller;
+package com.proxy.controller;
 
-import com.proxy.server.entities.Connector;
-import com.proxy.server.handler.AdminHandler;
-import com.proxy.server.handler.ForwardHandler;
-import com.proxy.server.repositories.AdminRepository;
-import com.proxy.server.repositories.ConnectorRepository;
+import com.proxy.entities.Connector;
+import com.proxy.handler.AdminHandler;
+import com.proxy.handler.ForwardHandler;
+import com.proxy.repositories.AdminRepository;
+import com.proxy.repositories.ConnectorRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;

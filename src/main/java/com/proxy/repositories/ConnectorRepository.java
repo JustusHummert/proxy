@@ -1,6 +1,6 @@
-package com.proxy.server.repositories;
+package com.proxy.repositories;
 
-import com.proxy.server.entities.Connector;
+import com.proxy.entities.Connector;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

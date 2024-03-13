@@ -1,11 +1,10 @@
-package com.proxy.server.handler;
+package com.proxy.handler;
 
-import com.proxy.server.entities.Admin;
-import com.proxy.server.entities.Connector;
-import com.proxy.server.handler.AdminHandler;
-import com.proxy.server.repositories.AdminRepository;
-import com.proxy.server.repositories.ConnectorRepository;
-import com.proxy.server.sessionManagement.SessionManager;
+import com.proxy.entities.Admin;
+import com.proxy.entities.Connector;
+import com.proxy.repositories.AdminRepository;
+import com.proxy.repositories.ConnectorRepository;
+import com.proxy.sessionManagement.SessionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

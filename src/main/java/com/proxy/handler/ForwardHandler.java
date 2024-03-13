@@ -1,4 +1,4 @@
-package com.proxy.server.handler;
+package com.proxy.handler;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;

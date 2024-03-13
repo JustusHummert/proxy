@@ -1,4 +1,4 @@
-package com.proxy.server.sessionManagement;
+package com.proxy.sessionManagement;
 
 import java.util.*;
 
