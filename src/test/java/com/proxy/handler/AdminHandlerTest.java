@@ -4,7 +4,6 @@ import com.proxy.entities.Admin;
 import com.proxy.entities.Connector;
 import com.proxy.repositories.AdminRepository;
 import com.proxy.repositories.ConnectorRepository;
-import com.proxy.sessionManagement.SessionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +37,8 @@ class AdminHandlerTest {
     void setUp() throws Exception {
         // Create a new MockHttpSession
         mockSession = new MockHttpSession();
-
         // Add the mock session to the SessionManager
-        SessionManager.getInstance().addSession(mockSession.getId());
+        mockSession.setAttribute("admin", "true");
     }
 
     @SuppressWarnings("unchecked")
