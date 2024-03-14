@@ -4,7 +4,6 @@ import com.proxy.repositories.AdminRepository;
 import com.proxy.repositories.ConnectorRepository;
 import com.proxy.entities.Admin;
 import com.proxy.entities.Connector;
-import com.proxy.sessionManagement.SessionManager;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,7 +67,7 @@ public class AdminHandler {
         if(response == null || response.equals("error"))
             return "invalid url";
         //Check if the sessionId is correct
-        if(!SessionManager.getInstance().valid(request.getSession().getId()))
+        if(!validSession(request.getSession()))
             return "Invalid session";
         //Check if the id already exists
         if (connectorRepository.existsById(subdomain)) {
@@ -82,7 +81,7 @@ public class AdminHandler {
     //Remove a connector from the database
     public static String removeConnector(String subdomain, HttpServletRequest request, ConnectorRepository connectorRepository){
         //Check if the sessionId is correct
-        if(!SessionManager.getInstance().valid(request.getSession().getId()))
+        if(!validSession(request.getSession()))
             return "Invalid session";
         if (!connectorRepository.existsById(subdomain)) {
             return "subdomain does not exist";
@@ -97,8 +96,7 @@ public class AdminHandler {
             return "No Admin";
         if(!BCrypt.checkpw(password, admin.get().getPassword()))
             return "Wrong Password";
-        HttpSession session = request.getSession();
-        SessionManager.getInstance().addSession(session.getId());
+        request.getSession().setAttribute("admin", "true");
         return "logged in";
     }
 
@@ -133,6 +131,11 @@ public class AdminHandler {
                 .exchangeStrategies(exchangeStrategies)
                 .baseUrl(url)
                 .build();
+    }
+
+    //check if the session is valid
+    public static boolean validSession(HttpSession session){
+        return session.getAttribute("admin") !=null && session.getAttribute("admin").equals("true");
     }
 
 
