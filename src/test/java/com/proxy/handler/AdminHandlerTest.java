@@ -38,7 +38,7 @@ class AdminHandlerTest {
         // Create a new MockHttpSession
         mockSession = new MockHttpSession();
         // Add the mock session to the SessionManager
-        mockSession.setAttribute("admin", "true");
+        mockSession.setAttribute("admin", true);
     }
 
     @SuppressWarnings("unchecked")
