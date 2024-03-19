@@ -67,7 +67,7 @@ public class AdminHandler {
         if(response == null || response.equals("error"))
             return "invalid url";
         //Check if the sessionId is correct
-        if(!validSession(request.getSession()))
+        if(invalidSession(request.getSession()))
             return "Invalid session";
         //Check if the id already exists
         if (connectorRepository.existsById(subdomain)) {
@@ -81,7 +81,7 @@ public class AdminHandler {
     //Remove a connector from the database
     public static String removeConnector(String subdomain, HttpServletRequest request, ConnectorRepository connectorRepository){
         //Check if the sessionId is correct
-        if(!validSession(request.getSession()))
+        if(invalidSession(request.getSession()))
             return "Invalid session";
         if (!connectorRepository.existsById(subdomain)) {
             return "subdomain does not exist";
@@ -96,7 +96,7 @@ public class AdminHandler {
             return "No Admin";
         if(!BCrypt.checkpw(password, admin.get().getPassword()))
             return "Wrong Password";
-        request.getSession().setAttribute("admin", "true");
+        request.getSession().setAttribute("admin", true);
         return "logged in";
     }
 
@@ -134,8 +134,8 @@ public class AdminHandler {
     }
 
     //check if the session is valid
-    public static boolean validSession(HttpSession session){
-        return session.getAttribute("admin") !=null && session.getAttribute("admin").equals("true");
+    public static boolean invalidSession(HttpSession session){
+        return session.getAttribute("admin") == null || !session.getAttribute("admin").equals(true);
     }
 
 
