@@ -7,6 +7,17 @@
         div{
             float: left;
         }
+        .modal{
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
     </style>
 </head>
 <body>
@@ -33,6 +44,12 @@
                 </td>
         </tbody>
     </table>
+    <div id="modal" class="modal">
+        <div>
+            <input type="password" id="password" aria-label="password"/>
+            <button type="button" id="loginBtn">login</button>
+        </div>
+    </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
         //add button functionality
@@ -94,6 +111,29 @@
                     console.error(jqXHR, textStatus, errorThrown);
                 });
         });
+
+    //login button functionality
+    $("#loginBtn").click(function () {
+        let password = $("#password").val();
+        $.ajax({
+            url: "/login",
+            method: "post",
+            data: {
+                password: password
+            },
+            dataType: "text",
+        })
+            .done(function (data) {
+                console.info(data);
+                alert(data);
+                if(data=="logged in")
+                    closeModal();
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                console.error(jqXHR, textStatus, errorThrown);
+            });
+    }); 
+    
         //make buttons react to Enter
         document.getElementById("url").addEventListener("keypress", function(event){
             if(event.key === "Enter") {
@@ -107,29 +147,23 @@
                 document.getElementById("url").focus();
             }
         });
+        document.getElementById("password").addEventListener("keypress", function(event){
+            if(event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("loginBtn").click();
+            }
+        });
 
         //function that opens prompt for password and sends it to the server
         function promptPassword(){
-            let password = prompt("password");
-            $.ajax({
-                url: "/login",
-                method: "post",
-                data: {
-                    password: password
-                },
-                dataType: "text",
-            })
-                .done(function (data){
-                    if(data == "Wrong password"){
-                        alert("Wrong password");
-                        promptPassword();
-                    }
-                    else
-                        alert(data);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    console.error(jqXHR, textStatus, errorThrown);
-                });
+            modal.style.display = "block";
+            $("#password").focus();
+        }
+
+        //function that closes prompt for password
+        function closeModal(){
+            modal.style.display = "none";
+            $("#url").focus();
         }
     </script>
 </body>
