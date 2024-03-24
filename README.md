@@ -14,6 +14,6 @@ The subdomain "admin" is used to access the admin interface.
 The admin logs in with the password that is set as a command line argument.
 Then he can add and remove subdomain and URL combinations.
 
-## Forwarding
+### Forwarding
 If a user sends an request to a subdomain that was previously added by the admin,
  his request is forwarded to the server and the answer is forwarded to him.
