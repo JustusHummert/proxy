@@ -1,4 +1,4 @@
-package com.proxy.handler;
+package com.proxy.services;
 
 import com.proxy.entities.Admin;
 import com.proxy.entities.Connector;
@@ -22,11 +22,12 @@ import reactor.core.publisher.Mono;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AdminHandlerTest {
+class AdminServiceTest {
     @Autowired
     AdminRepository adminRepository;
     @Autowired
     ConnectorRepository connectorRepository;
+    @Autowired AdminService adminService;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -53,14 +54,14 @@ class AdminHandlerTest {
         parameters.add("subdomain", "example");
         parameters.add("url", "https://example.com");
         //valid request
-        Mono<ResponseEntity<String>> validConnectorResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> validConnectorResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         validConnectorResponse.flatMap(response -> {
             assert response.getBody().equals("example now connected to https://example.com");
             return Mono.just(response);
         });
         //subdomain already exists
-        Mono<ResponseEntity<String>> invalidConnectorResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> invalidConnectorResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         invalidConnectorResponse.flatMap(response -> {
             assert response.getBody().equals("subdomain already exists");
@@ -68,7 +69,7 @@ class AdminHandlerTest {
         });
         //wrong session
         request.setSession(new MockHttpSession());
-        Mono<ResponseEntity<String>> invalidSessionResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> invalidSessionResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         invalidSessionResponse.flatMap(response -> {
             assert response.getBody().equals("Invalid session");
@@ -78,7 +79,7 @@ class AdminHandlerTest {
         //url without http
         request.setSession(mockSession);
         parameters.set("url", "example.com");
-        Mono<ResponseEntity<String>> noHttpResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> noHttpResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         noHttpResponse.flatMap(response -> {
             assert response.getBody().equals("example now connected to https://example.com");
@@ -86,7 +87,7 @@ class AdminHandlerTest {
         });
         //invalid url
         parameters.set("url", "invalid");
-        Mono<ResponseEntity<String>> invalidUrlResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> invalidUrlResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         invalidUrlResponse.flatMap(response -> {
             assert response.getBody().equals("invalid url");
@@ -106,16 +107,16 @@ class AdminHandlerTest {
         parameters.add("subdomain", "example");
         //add connector and remove it
         connectorRepository.save(new Connector("example", "https://example.com"));
-        Mono<ResponseEntity<String>> validConnectorResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> validConnectorResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         assert validConnectorResponse.block().getBody().equals("example removed");
         //try to remove it again
-        Mono<ResponseEntity<String>> invalidConnectorResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> invalidConnectorResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         assert invalidConnectorResponse.block().getBody().equals("subdomain does not exist");
         //wrong Session
         request.setSession(new MockHttpSession());
-        Mono<ResponseEntity<String>> invalidSessionResponse = (Mono<ResponseEntity<String>>) AdminHandler.handleRequest(
+        Mono<ResponseEntity<String>> invalidSessionResponse = (Mono<ResponseEntity<String>>) adminService.handleRequest(
                 request, parameters, null, connectorRepository, adminRepository);
         assert invalidSessionResponse.block().getBody().equals("Invalid session");
     }

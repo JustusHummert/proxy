@@ -1,8 +1,8 @@
 package com.proxy.controller;
 
 import com.proxy.entities.Connector;
-import com.proxy.handler.AdminHandler;
-import com.proxy.handler.ForwardHandler;
+import com.proxy.services.AdminService;
+import com.proxy.services.ForwardService;
 import com.proxy.repositories.AdminRepository;
 import com.proxy.repositories.ConnectorRepository;
 
@@ -21,9 +21,12 @@ import java.util.Optional;
 public class WebController {
     @Autowired
     private ConnectorRepository connectorRepository;
-
     @Autowired
     private AdminRepository adminRepository;
+    @Autowired
+    private AdminService adminService;
+    @Autowired
+    private ForwardService forwardService;
 
     //redirect all request to a Method based on subdomain
     @RequestMapping(value="**")
@@ -33,14 +36,15 @@ public class WebController {
         //If there is no subdomain the subdomain is the domain
         String subdomain = request.getServerName().split("\\.")[0];
         if (subdomain.equals("admin")) {
-            return AdminHandler.handleRequest(request, parameters, model, connectorRepository, adminRepository);
+            //If the subdomain is admin the request is handled by the adminService
+            return adminService.handleRequest(request, parameters, model, connectorRepository, adminRepository);
         }
         Optional<Connector> optionalConnector = connectorRepository.findById(subdomain);
         if (optionalConnector.isEmpty())
             return Mono.just(ResponseEntity.notFound().build());
         String url = optionalConnector.get().getUrl();
-        //ForwardHandler will handle this
-        return ForwardHandler.forwardRequest(request, url, parameters);
+        //ForwardService is used to forward the request to the url
+        return forwardService.forwardRequest(request, url, parameters);
     }
 
 
