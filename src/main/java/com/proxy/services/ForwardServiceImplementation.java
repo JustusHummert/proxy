@@ -1,4 +1,4 @@
-package com.proxy.handler;
+package com.proxy.services;
 
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -7,21 +7,19 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
-import java.util.Iterator;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
-
-public class ForwardHandler {
+@Service
+public class ForwardServiceImplementation implements ForwardService{
 
     //forward the request to the target url
-    public static Mono<ResponseEntity<byte[]>> forwardRequest(HttpServletRequest request, String url, MultiValueMap<String, String> parameters){
+    @Override
+    public Mono<ResponseEntity<byte[]>> forwardRequest(HttpServletRequest request, String url, MultiValueMap<String, String> parameters){
         String fullUrl = url + request.getRequestURI();
         String queryString = request.getQueryString();
         //remove the parameters that are in the queryString from the parameters

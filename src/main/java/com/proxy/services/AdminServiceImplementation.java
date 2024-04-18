@@ -1,4 +1,4 @@
-package com.proxy.handler;
+package com.proxy.services;
 
 import com.proxy.repositories.AdminRepository;
 import com.proxy.repositories.ConnectorRepository;
@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -25,9 +26,11 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class AdminHandler {
+@Service
+public class AdminServiceImplementation implements AdminService {
     //handle the request based on the path
-    public static Object handleRequest(HttpServletRequest request, MultiValueMap<String, String> parameters,
+    @Override
+    public Object handleRequest(HttpServletRequest request, MultiValueMap<String, String> parameters,
                                                              Model model, ConnectorRepository connectorRepository,
                                                              AdminRepository adminRepository) {
         //use Method according to the path
@@ -55,7 +58,7 @@ public class AdminHandler {
     }
 
     //Add a connector to the database
-    public static String addConnector(String subdomain, String url, HttpServletRequest request,
+    private String addConnector(String subdomain, String url, HttpServletRequest request,
                                                     ConnectorRepository connectorRepository, AdminRepository adminRepository){
         //check if url starts with http:// or https://  otherwise add https://
         if(!url.startsWith("http://") && !url.startsWith("https://"))
@@ -79,7 +82,7 @@ public class AdminHandler {
     }
 
     //Remove a connector from the database
-    public static String removeConnector(String subdomain, HttpServletRequest request, ConnectorRepository connectorRepository){
+    private String removeConnector(String subdomain, HttpServletRequest request, ConnectorRepository connectorRepository){
         //Check if the sessionId is correct
         if(invalidSession(request.getSession()))
             return "Invalid session";
@@ -90,7 +93,7 @@ public class AdminHandler {
         return subdomain + " removed";
     }
 
-    public static String login(String password, HttpServletRequest request, AdminRepository adminRepository){
+    private String login(String password, HttpServletRequest request, AdminRepository adminRepository){
         Optional<Admin> admin = adminRepository.findById(0);
         if(admin.isEmpty())
             return "No Admin";
@@ -101,7 +104,7 @@ public class AdminHandler {
     }
 
     //return the Subdomains of all connectors
-    public static Set<String> getConnections(ConnectorRepository connectorRepository){
+    private Set<String> getConnections(ConnectorRepository connectorRepository){
         Iterable<Connector> connectors = connectorRepository.findAll();
         Set<String> result = new HashSet<>();
         connectors.forEach(
@@ -113,13 +116,13 @@ public class AdminHandler {
     }
 
     //return the admin page
-    public static String admin(Model model, ConnectorRepository connectorRepository){
+    private String admin(Model model, ConnectorRepository connectorRepository){
         model.addAttribute("connectors", connectorRepository.findAll());
         return "admin";
     }
 
     //create WebClient
-    private static WebClient createWebClient(String url){
+    private WebClient createWebClient(String url){
         //Configute custom ExchangeStrategies to avoid buffer limit exception
         //16MB buffer size
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
@@ -134,7 +137,7 @@ public class AdminHandler {
     }
 
     //check if the session is valid
-    public static boolean invalidSession(HttpSession session){
+    private boolean invalidSession(HttpSession session){
         return session.getAttribute("admin") == null || !session.getAttribute("admin").equals(true);
     }
 
