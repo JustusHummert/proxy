@@ -1,0 +1,16 @@
+volumes:
+  db: {}
+
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_DATABASE: dbProxy
+      MYSQL_USER: springuser
+      MYSQL_PASSWORD: ThePassword
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    ports:
+      - 8084:3306
+    volumes:
+      - db:/var/lib/mysql
+
