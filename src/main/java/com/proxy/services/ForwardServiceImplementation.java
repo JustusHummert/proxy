@@ -32,9 +32,7 @@ public class ForwardServiceImplementation implements ForwardService{
             String[] params = queryString.split("&");
             for(String param : params){
                 String[] keyValue = param.split("=");
-                if(parameters.containsKey(keyValue[0])){
-                    parameters.get(keyValue[0]).remove(keyValue[1]);
-                }
+                parameters.remove(keyValue[0]);
             }
         }
         //Create WebClient
