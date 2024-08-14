@@ -3,171 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin</title>
-    <style>
-        div{
-            float: left;
-        }
-        .modal{
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-    }
-    </style>
 </head>
 <body>
     <h1>Admin</h1>
-    <form class="div">
-        <p>
-            <input type="text" id="subdomain" placeholder="subdomain" aria-label="subdomain">
-        </p>
-        <p>
-            <input type="text" id="url" placeholder="url" aria-label="url">
-        </p>
-        <p>
-            <button type="button" id="addConnectorBtn">Add Connector</button>
-        </p>
-    </form>
-    <table id="connectorTable" class="div">
-        <tbody>
-            <tr th:each="connector: ${connectors}">
-                <td th:text="${connector.subdomain}"></td>
-                <td th:text="${connector.url}"></td>
-                <td>
-                    <button type="button" class="btn delete-Connector"
-                     th:data-subdomain="${connector.subdomain}">delete</button>
-                </td>
-        </tbody>
-    </table>
-    <div id="modal" class="modal">
-        <div>
-            <input type="password" id="password" aria-label="password"/>
-            <button type="button" id="loginBtn">login</button>
-        </div>
+    <div th:if="${param.invalidSession}">
+        <form action="/login" method="post">
+            <input type="password" name="password">
+            <input type="submit" value="login">
+        </form>
     </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script>
-        //add button functionality
-        $("#addConnectorBtn").click(function (e){
-            e.preventDefault();
-            let subdomain = $("#subdomain").val();
-            let url = $("#url").val();
-            if(subdomain == ""){
-                $("#subdomain").css("border-color", "red");
-                return;
-            }
-            if(url == ""){
-                $("#url").css("border-color", "red");
-                return;
-            }
-            $.ajax({
-                url: "/addConnector",
-                method: "post",
-                data: {
-                    subdomain: subdomain,
-                    url: url
-                },
-                dataType: "text",
-            })
-                .done(function (data){
-                    if(data=="subdomain already exists")
-                        document.getElementById("subdomain").focus();
-                    else if(data=="Invalid session")
-                        promptPassword();
-                    else if(data.includes("now connected to"))
-                        location.reload();             
-                    else
-                        alert(data);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    console.error(jqXHR, textStatus, errorThrown);
-                });
-        });
-        //delete button functionality
-        $(".delete-Connector").click(function (e){
-            let subdomain = $(this).data("subdomain");
-            $.ajax({
-                url: "/removeConnector",
-                method: "post",
-                data: {
-                    subdomain: subdomain
-                },
-                dataType: "text",
-            })
-                .done(function (data){
-                    if(data==subdomain + " removed")
-                        location.reload();
-                    else if(data=="Invalid session")
-                        promptPassword();
-                    else
-                        alert(data);
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    console.error(jqXHR, textStatus, errorThrown);
-                });
-        });
-
-    //login button functionality
-    $("#loginBtn").click(function () {
-        let password = $("#password").val();
-        $.ajax({
-            url: "/login",
-            method: "post",
-            data: {
-                password: password
-            },
-            dataType: "text",
-        })
-            .done(function (data) {
-                console.info(data);
-                alert(data);
-                if(data=="logged in")
-                    closeModal();
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                console.error(jqXHR, textStatus, errorThrown);
-            });
-    }); 
-    
-        //make buttons react to Enter
-        document.getElementById("url").addEventListener("keypress", function(event){
-            if(event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("addConnectorBtn").click();
-            }
-        });
-        document.getElementById("subdomain").addEventListener("keypress", function(event){
-            if(event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("url").focus();
-            }
-        });
-        document.getElementById("password").addEventListener("keypress", function(event){
-            if(event.key === "Enter") {
-                event.preventDefault();
-                document.getElementById("loginBtn").click();
-            }
-        });
-
-        //function that opens prompt for password and sends it to the server
-        function promptPassword(){
-            modal.style.display = "block";
-            $("#password").focus();
-        }
-
-        //function that closes prompt for password
-        function closeModal(){
-            modal.style.display = "none";
-            $("#url").focus();
-        }
-
-        //focus subdomain input
-        $("#subdomain").focus();
-    </script>
+    <div th:if="${param.invalidPassword}">
+        The password is invalid.
+    </div>
+    <div th:if="${param.noAdmin}">
+        There is no admin.
+    </div>
+    <div th:if="${param.invalidUrl}">
+        The Url is invalid.
+    </div>
+    <div th:if="${param.subdomainExists}">
+        The subdomain already exists.
+    </div>
+    <div th:unless="${param.invalidSession}">
+        <form action="/addConnector" method="post">
+            <p>
+                <input type="text" name="subdomain" id="subdomain" placeholder="subdomain">
+            </p>
+            <p>
+                <input type="text" name="url" placeholder="url">
+            </p>
+            <p>
+                <input type="submit" value="Add Connector">
+            </p>
+        </form>
+        <table id="connectorTable">
+            <tbody>
+                <tr th:each="connector: ${connectors}">
+                    <td th:text="${connector.subdomain}"></td>
+                    <td th:text="${connector.url}"></td>
+                    <td>
+                        <form action="/removeConnector" method="post">
+                                <input type="hidden" name="subdomain" th:value="${connector.subdomain}">
+                                <input type="submit" value="delete">
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import org.springframework.web.servlet.view.RedirectView;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
@@ -34,27 +35,24 @@ public class AdminServiceImplementation implements AdminService {
                                                              Model model, ConnectorRepository connectorRepository,
                                                              AdminRepository adminRepository) {
         //use Method according to the path
-        return switch (request.getRequestURI()) {
+        switch (request.getRequestURI()) {
             case "/addConnector" -> {
-                String answer = addConnector(parameters.get("subdomain").get(0), parameters.get("url").get(0), request, connectorRepository, adminRepository);
-                yield Mono.just(ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(answer));
+                return addConnector(parameters.get("subdomain").get(0), parameters.get("url").get(0), request, connectorRepository, adminRepository);
             }
             case "/removeConnector" -> {
-                String answer = removeConnector(parameters.get("subdomain").get(0), request, connectorRepository);
-                yield Mono.just(ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(answer));
+                return removeConnector(parameters.get("subdomain").get(0), request, connectorRepository);
             }
             case "/login" -> {
-                String answer = login(parameters.get("password").get(0), request, adminRepository);
-                yield Mono.just(ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(answer));
+                return login(parameters.get("password").get(0), request, adminRepository);
             }
             case "/getConnections" -> {
                 Set<String> connections = getConnections(connectorRepository);
-                yield Mono.just(ResponseEntity.ok().body(connections));
+                return Mono.just(ResponseEntity.ok().body(connections));
             }
-            default ->{
-                yield admin(model, connectorRepository);
+            default -> {
+                return admin(model, connectorRepository);
             }
-        };
+        }
     }
 
     //Add a connector to the database
@@ -68,39 +66,40 @@ public class AdminServiceImplementation implements AdminService {
                 .onErrorReturn("error").block();
         //Invalid Url
         if(response == null || response.equals("error"))
-            return "invalid url";
+            return "redirect:/?invalidUrl";
         //Check if the sessionId is correct
         if(invalidSession(request.getSession()))
-            return "Invalid session";
-        //Check if the id already exists
+            return "redirect:/?invalidSession";
+        //Check if the subdomain already exists
         if (connectorRepository.existsById(subdomain)) {
-            return "subdomain already exists";
+            return "redirect:/?subdomainExists";
         }
         //Add the connector to the database
         connectorRepository.save(new Connector(subdomain, url));
-        return subdomain + " now connected to " + url;
+        return "redirect:/";
     }
 
     //Remove a connector from the database
     private String removeConnector(String subdomain, HttpServletRequest request, ConnectorRepository connectorRepository){
         //Check if the sessionId is correct
         if(invalidSession(request.getSession()))
-            return "Invalid session";
+            return "redirect:/?invalidSession";
+        //Check if the subdomain exists
         if (!connectorRepository.existsById(subdomain)) {
-            return "subdomain does not exist";
+            return "redirect:/?subdomainDoesNotExist";
         }
         connectorRepository.deleteById(subdomain);
-        return subdomain + " removed";
+        return "redirect:/";
     }
 
     private String login(String password, HttpServletRequest request, AdminRepository adminRepository){
         Optional<Admin> admin = adminRepository.findById(0);
         if(admin.isEmpty())
-            return "No Admin";
+            return "redirect:/?invalidSession&noAdmin";
         if(!BCrypt.checkpw(password, admin.get().getPassword()))
-            return "Wrong Password";
+            return "redirect:/?invalidSession&invalidPassword";
         request.getSession().setAttribute("admin", true);
-        return "logged in";
+        return "redirect:/";
     }
 
     //return the Subdomains of all connectors
