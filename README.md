@@ -6,7 +6,7 @@ A proxy/reverse-proxy server.
 - Requests are send to the Backend using the jQuery library.
 - Backend consists of a Spring Boot Application.
 - Backend communicates with the database using JPA.
-- MySQL database.
+- H2 database.
 
 ## Features
 ### Admin interface
