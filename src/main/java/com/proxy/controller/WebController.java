@@ -8,11 +8,14 @@ import com.proxy.repositories.ConnectorRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -31,7 +34,7 @@ public class WebController {
     //redirect all request to a Method based on subdomain
     @RequestMapping(value="**")
     public Object redirect(HttpServletRequest request, @RequestParam MultiValueMap<String, String> parameters,
-                                                 Model model){
+                           Model model){
         //Get the subdomain
         //If there is no subdomain the subdomain is the domain
         String subdomain = request.getServerName().split("\\.")[0];
@@ -44,7 +47,11 @@ public class WebController {
             return Mono.just(ResponseEntity.notFound().build());
         String url = optionalConnector.get().getUrl();
         //ForwardService is used to forward the request to the url
-        return forwardService.forwardRequest(request, url, parameters);
+        try {
+            return forwardService.forwardRequest(request, url, parameters);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 
 
